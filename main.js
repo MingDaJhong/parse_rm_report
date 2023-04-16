@@ -11,6 +11,23 @@ try {
 }
 
 // Function ---------------------------------------------------------------------------------------
+function correctEndDay (arr) {
+  const result = []
+
+  for (let obj of arr) {
+    let newObj = {...obj}
+
+    const date = new Date(obj['End Date'])
+    const nextDay = date.getDate() + 1
+    date.setUTCDate(nextDay)
+    newObj['End Date'] = date
+
+    result.push(newObj)
+  }
+
+  return result
+}
+
 function parseNames (arr) {
   // Matches any word character
   const regex = /\b[\w\s]+\b/g
@@ -114,7 +131,8 @@ if (process.argv.length > 2 && excelToJson) {
   const parsedData = {}
 
   Object.keys(result).forEach(sheet => {
-    let tempArray = parseNames(result[sheet])
+    let tempArray = correctEndDay(result[sheet])
+    tempArray = parseNames(tempArray)
     tempArray = parseDateRanges(tempArray)
 
     parsedData[sheet] = tempArray
@@ -151,7 +169,7 @@ if (process.argv.length > 2 && excelToJson) {
 
   // Set JSON to xlsx and download
   // NOTE: xlsx is in the file where is same file as main.js
-  // jsonToExcel(xlsxData, xlsxConfig)
+  jsonToExcel(xlsxData, xlsxConfig)
 }
 
 // ------------------------------------------------------------------------------------------------
