@@ -11,20 +11,41 @@ try {
 }
 
 // Function ---------------------------------------------------------------------------------------
-function correctEndDay (arr) {
+function correctDate (arr) {
   const result = []
 
   for (let obj of arr) {
+    if (!obj['Start Date'] || !obj['End Date']) {
+      result.push(obj)
+      continue
+    }
+
     let newObj = {...obj}
 
-    const date = new Date(obj['End Date'])
-    const nextDay = date.getDate() + 1
-    date.setUTCDate(nextDay)
-    newObj['End Date'] = date
+    const startDate = new Date(obj['Start Date'])
+    const endDate = new Date(obj['End Date'])
+
+    startDate.setUTCFullYear(startDate.getFullYear())
+    startDate.setUTCMonth(startDate.getMonth())
+    startDate.setUTCDate(startDate.getDate())
+    startDate.setUTCHours(0)
+    startDate.setUTCMinutes(0)
+    startDate.setUTCSeconds(0)
+
+    endDate.setUTCFullYear(endDate.getFullYear())
+    endDate.setUTCMonth(endDate.getMonth())
+    endDate.setUTCDate(endDate.getDate())
+    endDate.setUTCHours(0)
+    endDate.setUTCMinutes(0)
+    endDate.setUTCSeconds(0)
+
+    newObj['Start Date'] = startDate
+    newObj['End Date'] = endDate
 
     result.push(newObj)
   }
 
+  console.log('Correct Date Finished !!!!!!!!')
   return result
 }
 
@@ -34,6 +55,12 @@ function parseNames (arr) {
   const result = []
 
   for (let obj of arr) {
+    // If 'Assigned To' is empty add it and skip parse process
+    if (!obj['Assigned To']) {
+      result.push(obj)
+      continue
+    }
+
     const names = obj['Assigned To'].match(regex)
     for (let name of names) {
       let newObj = {...obj}
@@ -42,6 +69,7 @@ function parseNames (arr) {
     }
   }
 
+  console.log('Parse Name Finished !!!!!!!!')
   return result
 }
 
@@ -51,10 +79,21 @@ function parseDateRanges (arr) {
   for (let obj of arr) {
     let startDate = new Date(obj['Start Date'])
     let endDate = new Date(obj['End Date'])
+    let currentYear = startDate.getFullYear()
     let currentMonth = startDate.getMonth()
+    let targetYear = endDate.getFullYear()
     let targetMonth = endDate.getMonth()
 
-    while (currentMonth <= targetMonth) {
+    if (!obj['Start Date'] || !obj['End Date']) {
+      result.push(obj)
+      continue
+    } else if (currentYear !== targetYear) {
+      result.push(obj)
+      continue
+    }
+
+    while ((currentYear === targetYear) &&
+           (currentMonth <= targetMonth)) {
       let rangeEnd = null
 
       if (currentMonth < targetMonth) {
@@ -78,9 +117,11 @@ function parseDateRanges (arr) {
 
       startDate = setNextMonthFirstDay(startDate)
       currentMonth = startDate.getMonth()
+      currentYear = startDate.getFullYear()
     }
   }
 
+  console.log('Parse Date Finished !!!!!!!!')
   return result
 }
 
@@ -131,7 +172,7 @@ if (process.argv.length > 2 && excelToJson) {
   const parsedData = {}
 
   Object.keys(result).forEach(sheet => {
-    let tempArray = correctEndDay(result[sheet])
+    let tempArray = correctDate(result[sheet])
     tempArray = parseNames(tempArray)
     tempArray = parseDateRanges(tempArray)
 
